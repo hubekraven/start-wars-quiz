@@ -1,6 +1,6 @@
-# start_wars_quiz
+# star_wars_quiz
 
-This template should help get you started developing with Vue 3 in Vite.
+A small quiz game about Star Wars 
 
 ## Recommended IDE Setup
 
