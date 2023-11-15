@@ -1,7 +1,7 @@
 const quizDdata = [
   {
     id: 1,
-    type:"one_choice",
+    type:"single_choice",
     ennonce:"Quel est le nom du père de Luke Skywalker?",
     choices:[
       {id:1, text:"Darth Sidious" },
@@ -14,7 +14,7 @@ const quizDdata = [
   },
   {
     id: 2,
-    type:"ordering",
+    type:"ordering_choice",
     ennonce:"Quelle est l'ordre correct des épisodes de Stars Wars?",
     choices:[
       {id:1, text:"Star Wars: Épisode V - L'Empire contre-attaque"},
@@ -26,7 +26,7 @@ const quizDdata = [
   },
   {
     id: 3,
-    type:"one_choice",
+    type:"single_choice",
     ennonce:"Qui est le réalisateur de l'episode VI: Le retour du Jedi?",
     choices:[
       {id:1, text:"George Lucas"},
@@ -39,7 +39,7 @@ const quizDdata = [
   },
   {
     id: 4,
-    type:"one_choice",
+    type:"single_choice",
     ennonce:"le quel de ces personnages ne fait pas parti de l'univers Start Wars?",
     choices:[
       {id:1, text:"Mace Windu"},
