@@ -20,7 +20,7 @@ const QzPool = shuffleArray(props.quizList)
 //======reactives variables
 let index = 0;
 // let userResponses = [];
-// let tempChoice = [];
+let tempChoice = [];
       
 
 let state = {
@@ -42,10 +42,10 @@ const handleUserChoice= (c)=>{
 
   switch(true){
     
-    case question.type === 'ordering_choice':
+    case question.type === 'ordering_choice':{
 
       let search = null
-      let count = 1
+      let canAdd = 1
       let choices = [1, 2, 3, 4, 5]
       let target
       let el_id
@@ -61,14 +61,34 @@ const handleUserChoice= (c)=>{
         el_id = c.target.parentElement.id;
       }
 
-    console.log("Handle ",  {target, el_id})
+      //No ordering value given
+      if(target.innerHTML ==="") return  choices.forEach((c)=>{
+          search = tempChoice.find(e=>e.key === c)
+          if(!search && canAdd >0){
+            target.innerHTML = c
+            tempChoice.push({key:c,value:el_id})
+            canAdd--
+          }
+        })
+      
+      //  Already received a ordering value
+      if(target.innerHTML !== ""){
+        search = tempChoice.find(e=>e.key === parseInt(target.innerHTML))
+        if(search){
+          target.innerHTML = ""; //remove ordering
+          tempChoice.splice(tempChoice.indexOf(search), 1); //remove from the selection
+        }
+      }
+
       break 
+    }
+    
     case question.type === 'multi_choice':
-    console.log("Handle ",  question.type)
-      break 
+        console.log("Handle ",  question.type)
+    break 
     case question.type === 'single_choice':
-    console.log("Handle ",  question.type)
-      break 
+        console.log("Handle ",  question.type)
+    break 
   }
 }
   
