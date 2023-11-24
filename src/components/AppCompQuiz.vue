@@ -1,7 +1,7 @@
 <!-- Component to display a quiz -->
 <script setup>
 import {shuffleArray} from "../assets/shared/genralFunctions" // importing Methods from external js
-
+import { computed } from 'vue'
 const props = defineProps({
   quiz: {
     type:Object,
@@ -14,9 +14,10 @@ const props = defineProps({
 
 //===Emitting event======//
 const $emit = defineEmits(['update-choice'])
-//======reactives variables
-const choices = shuffleArray(props.quiz.choices)
+let choices = computed(()=>shuffleArray(props.quiz.choices))
 
+
+console.log({choices})
 //======END reactives variables
 
 /**
@@ -44,7 +45,7 @@ $emit('update-choice', e)
       </div>
       <div v-show="quiz.type == 'multi_choice'">
         <label v-for="(choice, i) of choices " :key="`Q_${quiz.id}_chx${i}`" class="q_choices" > {{choice.text}}
-            <input type="checkobx" name="choice" :id="choice.id" @click="choiceAction($event)"/>
+            <input type="checkbox" name="choice" :id="choice.id" @click="choiceAction($event)"/>
             <span class="checkmark"></span>
         </label>
       </div>    

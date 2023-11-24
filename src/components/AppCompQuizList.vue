@@ -7,7 +7,7 @@ import {
 
 import AppCompQuiz from '@/components/AppCompQuiz.vue'
 import AppCompResult from '@/components/AppCompResult.vue'
-
+import { ref, reactive } from 'vue'
 const props = defineProps({
   quizList: {
     type:Array,
@@ -18,15 +18,16 @@ const props = defineProps({
 })
 const QzPool = shuffleArray(props.quizList)
 //======reactives variables
-let index = 0;
+let index=0;
 // let userResponses = [];
-let tempChoice = [];
+let tempChoice = ref([]);
+let btnDisabled = ref(true)
       
 
-let state = {
+let state = reactive({
   question: QzPool[index],
   isCompleted: false,
-}
+})
 
 //======END reactives variables
 
@@ -39,12 +40,12 @@ const handleUserChoice= (c)=>{
   if(!state.question) return 
   
   const {question} = state
-
+let search =null
   switch(true){
     
     case question.type === 'ordering_choice':{
 
-      let search = null
+      //let search = null
       let canAdd = 1
       let choices = [1, 2, 3, 4, 5]
       let target
@@ -63,35 +64,75 @@ const handleUserChoice= (c)=>{
 
       //No ordering value given
       if(target.innerHTML ==="") return  choices.forEach((c)=>{
-          search = tempChoice.find(e=>e.key === c)
+          search = tempChoice.value.find(e=>e.key === c)
           if(!search && canAdd >0){
             target.innerHTML = c
-            tempChoice.push({key:c,value:el_id})
+            tempChoice.value.push({key:c,value:el_id})
             canAdd--
           }
+    
+           btnDisabled.value = tempChoice.value.length == question.choices.length ? false : true
         })
       
       //  Already received a ordering value
       if(target.innerHTML !== ""){
-        search = tempChoice.find(e=>e.key === parseInt(target.innerHTML))
+        search = tempChoice.value.find(e=>e.key === parseInt(target.innerHTML))
         if(search){
           target.innerHTML = ""; //remove ordering
-          tempChoice.splice(tempChoice.indexOf(search), 1); //remove from the selection
+          tempChoice.value.splice(tempChoice.value.indexOf(search), 1); //remove from the selection
         }
       }
-
+   
+      btnDisabled.value = tempChoice.value.length == 4 ? false : true
+      
       break 
     }
     
     case question.type === 'multi_choice':
-        console.log("Handle ",  question.type)
+
+     search = tempChoice.value.indexOf(c.target.id) //search for the checked elem id in the tempChoice
+   
+      if (search === -1 && c.target.checked) {
+        tempChoice.value.push(c.target.id);
+      } else {
+        tempChoice.value.splice(search, 1);
+      }
+
+        btnDisabled.value = tempChoice.value.length > 0 ? false : true
     break 
     case question.type === 'single_choice':
-        console.log("Handle ",  question.type)
+        tempChoice.value.splice(0,1, c.target.id)
+        btnDisabled.value = false
     break 
   }
 }
-  
+
+/**
+*@description Method to handle validation of the question once user answered
+*/
+  const validate = ()=> {
+    if (tempChoice.value.length > 0) {
+      // this.userResponses.push({
+      //   question: quizElement.id,
+      //   userResponse: tempChoice,
+      // });
+      tempChoice.value = [];
+      updateQuiz();
+
+      //this.btnDisabled = true;
+    }
+  }
+/**
+*@description Method to update the que quiz
+*/
+  const updateQuiz = ()=> {
+   if(!QzPool[index+ 1]) return state.question = null
+    
+    index+=1
+    state.question = QzPool[index]
+   
+  }
+
 </script>
 
 <template>
@@ -100,6 +141,13 @@ const handleUserChoice= (c)=>{
     :quiz="state.question" 
     @update-choice="handleUserChoice"
   />
+  <div class="btn">
+    <button @click="validate()"
+      :disabled="btnDisabled"
+      :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
+      Valider
+    </button>
+  </div>
 </template>
 
 <style lang="css" scoped>
