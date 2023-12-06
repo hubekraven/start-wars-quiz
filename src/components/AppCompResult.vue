@@ -1,12 +1,63 @@
-<template>
-  <div>
-This Your Result Page
-  </div>
-</template>
 
-<script>
+
+<script setup>
+
+import imgFailed from "@/assets/images/jedi_failed.png";
+import imgAlmostThere from "@/assets/images/tempsnip.png";
+import imgSuccess from "@/assets/images/jedi_success.png";
+
+const props = defineProps({
+  quizResult: {
+    type:[Number,null],
+    default(rawProps){
+      null
+    }
+  }
+})
+
+/**
+*@description handle the user final result - show message and correct icone according to user performance
+*@return {Obj}   message a, imgUrl
+*/
+ const computResult = ()=>{
+    if(props.quizResult < 3 )return {
+      message:"Désolé! vous ne pouvez pas être un Jedi",
+      imgUrl: imgFailed
+    }
+    
+   
+    if(props.quizResult < 5 ) return {
+      message: "Encore un effort! Vous maitrisez presque la Force",
+      imgUrl: imgAlmostThere
+    }
+    
+    if(props.quizResult === 5) return {
+      message:"Excellent! la Force est avec vous. Vous êtes un vrai Jedi",
+      imgUrl: imgSuccess
+    }
+    
+  }
   
 </script>
+
+<template>
+  <div class="resultat-container" v-if="props.quizResult">
+     <div class="resultat">
+         <div  class="score">Votre score: 
+           <span>{{props.quizResult}}/5</span>
+         </div>
+         <span class="message">{{computResult().message}}</span>
+         <img class="icon" :src="computResult().imgUrl"/>
+       </div>
+       <div class="btn">
+           <button @click="resetQuiz"
+             class= "btn-reset">
+             Relancer
+           </button>
+       </div>
+ </div>
+ 
+ </template>
 
 <style lang="css" scoped>
 .resultat{

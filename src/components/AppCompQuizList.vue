@@ -7,7 +7,7 @@ import {
 
 import AppCompQuiz from '@/components/AppCompQuiz.vue'
 import AppCompResult from '@/components/AppCompResult.vue'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed,watch } from 'vue'
 const props = defineProps({
   quizList: {
     type:Array,
@@ -18,17 +18,15 @@ const props = defineProps({
 })
 const QzPool = shuffleArray(props.quizList)
 //======reactives variables
-let index=0;
-// let userResponses = [];
+let questionIndex=ref(0);
+let userResponses = ref([]);
 let tempChoice = ref([]);
 let btnDisabled = ref(true)
-      
+let isCompleted = ref(false)
 
-let state = reactive({
-  question: QzPool[index],
-  isCompleted: false,
-})
 
+
+let question = computed(()=> QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null )
 //======END reactives variables
 
 /**
@@ -37,13 +35,12 @@ let state = reactive({
 */
 const handleUserChoice= (c)=>{
   
-  if(!state.question) return 
+  if(!question.value) return 
   
-  const {question} = state
-let search =null
+  let search =null
   switch(true){
     
-    case question.type === 'ordering_choice':{
+    case question.value.type === 'ordering_choice':{
 
       //let search = null
       let canAdd = 1
@@ -71,7 +68,7 @@ let search =null
             canAdd--
           }
     
-           btnDisabled.value = tempChoice.value.length == question.choices.length ? false : true
+           btnDisabled.value = tempChoice.value.length == question.value.choices.length ? false : true
         })
       
       //  Already received a ordering value
@@ -88,7 +85,7 @@ let search =null
       break 
     }
     
-    case question.type === 'multi_choice':
+    case question.value.type === 'multi_choice':
 
      search = tempChoice.value.indexOf(c.target.id) //search for the checked elem id in the tempChoice
    
@@ -100,7 +97,7 @@ let search =null
 
         btnDisabled.value = tempChoice.value.length > 0 ? false : true
     break 
-    case question.type === 'single_choice':
+    case question.value.type === 'single_choice':
         tempChoice.value.splice(0,1, c.target.id)
         btnDisabled.value = false
     break 
@@ -112,42 +109,89 @@ let search =null
 */
   const validate = ()=> {
     if (tempChoice.value.length > 0) {
-      // this.userResponses.push({
-      //   question: quizElement.id,
-      //   userResponse: tempChoice,
-      // });
+     userResponses.value.push({
+        question: question.value.id,
+        userResponse: tempChoice.value,
+      });
       tempChoice.value = [];
-      updateQuiz();
-
-      //this.btnDisabled = true;
+      btnDisabled.value = true
+      updateQuestionIndex();
     }
   }
 /**
 *@description Method to update the que quiz
 */
-  const updateQuiz = ()=> {
-   if(!QzPool[index+ 1]) return state.question = null
-    
-    index+=1
-    state.question = QzPool[index]
-   
+  const updateQuestionIndex = ()=> {
+       if(questionIndex.value > QzPool.length) return
+       questionIndex.value+=1
   }
+
+/**
+*@description handle the user final user responses- show message and correct icone according to user performance
+*@return {Obj}   message a, imgUrl
+*/
+
+  const comptResult = () => {
+    let correctAnswers = null;
+
+    userResponses.value.forEach((element) => {
+      //Search corresponding question in the QzPool
+      console.log("===> Element: ",element.userResponse)
+      let question = QzPool.find((el) => {
+        return el.id === element.question;
+      });
+      // compute the result according to the type of question
+      if (question && question.type === "ordering_choice") {
+        let count = 0;
+      
+        if (element.userResponse.length == question.solus.length) {
+          for (let i = 0; i < question.solus.length; i++) {
+            if (element.userResponse[i].value == question.solus[i]) count += 1;
+          }
+          if (count == question.solus.length) {
+            correctAnswers += 1;
+          }
+        }
+      } else if (question && question.type === "multi_choice") {
+        let count = 0;
+        if (element.userResponse.length == question.solus.length) {
+          element.userResponse.forEach((el) => {
+            if (question.solus.includes(parseInt(el))) count += 1;
+          });
+        }
+        if (count == question.solus.length) {
+          correctAnswers += 1;
+        }
+      } else if (question && question.type === "single_choice") {
+        console.log(element.userResponse);
+        if (question && question.solus == element.userResponse[0])
+          correctAnswers += 1;
+      }
+    });
+    console.log({correctAnswers})
+    return 1;
+  };
+
+  watch(question, (newValue) => {
+  if(!question.value )isCompleted.value = true
+})
 
 </script>
 
 <template>
   <app-comp-quiz 
-    v-show="!state.isCompleted" 
-    :quiz="state.question" 
+    v-show="!isCompleted" 
+    :quiz="question" 
     @update-choice="handleUserChoice"
   />
-  <div class="btn">
+  <div class="btn" v-show="!isCompleted">
     <button @click="validate()"
       :disabled="btnDisabled"
       :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
       Valider
     </button>
   </div>
+  <app-comp-result v-if="isCompleted" :quizResult="comptResult()"></app-comp-result>
 </template>
 
 <style lang="css" scoped>
