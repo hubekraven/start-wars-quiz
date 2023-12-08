@@ -37,6 +37,11 @@ const props = defineProps({
     }
     
   }
+  const $emit = defineEmits(['reset-quiz'])
+
+  const askQuizReset = ()=>{
+    $emit('reset-quiz')
+  }
   
 </script>
 
@@ -50,7 +55,7 @@ const props = defineProps({
          <img class="icon" :src="computResult().imgUrl"/>
        </div>
        <div class="btn">
-           <button @click="resetQuiz"
+           <button @click="askQuizReset"
              class= "btn-reset">
              Relancer
            </button>

@@ -169,8 +169,19 @@ const handleUserChoice= (c)=>{
       }
     });
     console.log({correctAnswers})
-    return 1;
+    return correctAnswers;
   };
+  
+  /**
+  *@description reset the quiz
+  */
+  const resetQuiz = ()=>{
+    console.log('Resetting Quiz!!!')
+    // questionIndex.value= 0
+    // userResponses.value= []
+    // tempChoice.value= []
+    // isCompleted.value = false
+  }
 
   watch(question, (newValue) => {
   if(!question.value )isCompleted.value = true
@@ -191,7 +202,7 @@ const handleUserChoice= (c)=>{
       Valider
     </button>
   </div>
-  <app-comp-result v-if="isCompleted" :quizResult="comptResult()"></app-comp-result>
+  <app-comp-result v-if="isCompleted" :quizResult="comptResult()" @reset-quiz="resetQuiz"></app-comp-result>
 </template>
 
 <style lang="css" scoped>

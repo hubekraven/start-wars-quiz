@@ -1,14 +1,23 @@
 <script setup>
   import AppCompQuizList from './components/AppCompQuizList.vue'
+  import AppCompWelcome from './components/AppCompWelcome.vue'
   import quizData from './db/quizData'
 
-  //const dataQuiz = 
+  import { ref } from 'vue'
+  
+  const gameStarted = ref(false) 
+
+  const startQuiz = ()=>{
+console.log("Starting guiz!!!!")
+    gameStarted.value = true
+  }
 </script>
 
 <template>
     <div class="wrapper">
-     <h1>Welcome to the Start wars Quiz</h1> 
-     <app-comp-quiz-list v-if="quizData" :quiz-list="quizData"/>
+     <h1>Start wars Quiz</h1> 
+     <app-comp-welcome v-if="!gameStarted" @start-game="startQuiz"/>
+     <app-comp-quiz-list v-if="gameStarted && quizData" :quiz-list="quizData"/>
     </div>
   <main>
    
