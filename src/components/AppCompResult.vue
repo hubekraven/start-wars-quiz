@@ -46,7 +46,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="resultat-container" v-if="props.quizResult">
+  <div class="resultat-container" v-if="props.quizResult !==null">
      <div class="resultat">
          <div  class="score">Votre score: 
            <span>{{props.quizResult}}/5</span>

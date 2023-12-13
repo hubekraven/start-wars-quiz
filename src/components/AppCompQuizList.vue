@@ -7,7 +7,7 @@ import {
 
 import AppCompQuiz from '@/components/AppCompQuiz.vue'
 import AppCompResult from '@/components/AppCompResult.vue'
-import { ref, reactive, computed,watch } from 'vue'
+import { ref, reactive, computed,watch,inject } from 'vue'
 const props = defineProps({
   quizList: {
     type:Array,
@@ -16,7 +16,7 @@ const props = defineProps({
     }
   }
 })
-const QzPool = shuffleArray(props.quizList)
+let QzPool = shuffleArray(props.quizList)
 //======reactives variables
 let questionIndex=ref(0);
 let userResponses = ref([]);
@@ -26,7 +26,12 @@ let isCompleted = ref(false)
 
 
 
+let {timerState} = inject ('timerState')
+
+//Watching the providered timerState to know if timer is stopped or not
+let timeEnded =  computed(()=> timerState.value ==='stopped' ? true : false )
 let question = computed(()=> QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null )
+
 //======END reactives variables
 
 /**
@@ -132,43 +137,45 @@ const handleUserChoice= (c)=>{
 */
 
   const comptResult = () => {
-    let correctAnswers = null;
-
-    userResponses.value.forEach((element) => {
-      //Search corresponding question in the QzPool
-      console.log("===> Element: ",element.userResponse)
-      let question = QzPool.find((el) => {
-        return el.id === element.question;
-      });
-      // compute the result according to the type of question
-      if (question && question.type === "ordering_choice") {
-        let count = 0;
-      
-        if (element.userResponse.length == question.solus.length) {
-          for (let i = 0; i < question.solus.length; i++) {
-            if (element.userResponse[i].value == question.solus[i]) count += 1;
+    let correctAnswers = 0;
+    console.log('UserResponse', userResponses.value)
+    if(userResponses.value.length)
+      userResponses.value.forEach((element) => {
+        //Search corresponding question in the QzPool
+        console.log("===> Element: ",element.userResponse)
+        let question = QzPool.find((el) => {
+          return el.id === element.question;
+        });
+        // compute the result according to the type of question
+        if (question && question.type === "ordering_choice") {
+          let count = 0;
+        
+          if (element.userResponse.length == question.solus.length) {
+            for (let i = 0; i < question.solus.length; i++) {
+              if (element.userResponse[i].value == question.solus[i]) count += 1;
+            }
+            if (count == question.solus.length) {
+              correctAnswers += 1;
+            }
+          }
+        } else if (question && question.type === "multi_choice") {
+          let count = 0;
+          if (element.userResponse.length == question.solus.length) {
+            element.userResponse.forEach((el) => {
+              if (question.solus.includes(parseInt(el))) count += 1;
+            });
           }
           if (count == question.solus.length) {
             correctAnswers += 1;
           }
+        } else if (question && question.type === "single_choice") {
+          console.log(element.userResponse);
+          if (question && question.solus == element.userResponse[0])
+            correctAnswers += 1;
         }
-      } else if (question && question.type === "multi_choice") {
-        let count = 0;
-        if (element.userResponse.length == question.solus.length) {
-          element.userResponse.forEach((el) => {
-            if (question.solus.includes(parseInt(el))) count += 1;
-          });
-        }
-        if (count == question.solus.length) {
-          correctAnswers += 1;
-        }
-      } else if (question && question.type === "single_choice") {
-        console.log(element.userResponse);
-        if (question && question.solus == element.userResponse[0])
-          correctAnswers += 1;
-      }
-    });
-    console.log({correctAnswers})
+      });
+    console.log('toto...', {correctAnswers})
+
     return correctAnswers;
   };
   
@@ -176,33 +183,42 @@ const handleUserChoice= (c)=>{
   *@description reset the quiz
   */
   const resetQuiz = ()=>{
-    console.log('Resetting Quiz!!!')
-    // questionIndex.value= 0
-    // userResponses.value= []
-    // tempChoice.value= []
-    // isCompleted.value = false
+  
+    isCompleted.value = false
+    QzPool = shuffleArray(props.quizList)
+    questionIndex.value= 0
+    tempChoice.value= []
+    userResponses.value= []
+    //btnDisabled.value = true
+
   }
 
   watch(question, (newValue) => {
-  if(!question.value )isCompleted.value = true
-})
+    //console.log('position',{currentIndex:questionIndex.value, 'quizLength': QzPool.length})
+    if(questionIndex.value === QzPool.length && !question.value ) isCompleted.value = true
+
+    // if(timerState === 'stopped') timeEnded.value = true
+  })
 
 </script>
 
 <template>
-  <app-comp-quiz 
-    v-show="!isCompleted" 
-    :quiz="question" 
-    @update-choice="handleUserChoice"
-  />
-  <div class="btn" v-show="!isCompleted">
-    <button @click="validate()"
-      :disabled="btnDisabled"
-      :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
-      Valider
-    </button>
-  </div>
-  <app-comp-result v-if="isCompleted" :quizResult="comptResult()" @reset-quiz="resetQuiz"></app-comp-result>
+  <template v-if="!isCompleted && !timeEnded">
+    <app-comp-quiz  
+
+      :quiz="question" 
+      @update-choice="handleUserChoice"
+    />
+    <div class="btn">
+      <button @click="validate()"
+        :disabled="btnDisabled"
+        :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
+        Valider
+      </button>
+    </div>
+  </template>
+
+  <app-comp-result v-if="isCompleted || timeEnded" :quizResult="comptResult()" @reset-quiz="resetQuiz"></app-comp-result>
 </template>
 
 <style lang="css" scoped>

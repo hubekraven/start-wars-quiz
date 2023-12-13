@@ -1,11 +1,19 @@
 <script setup>
   import AppCompQuizList from './components/AppCompQuizList.vue'
   import AppCompWelcome from './components/AppCompWelcome.vue'
+  import TimerComponent from './components/TimerComponent.vue'
   import quizData from './db/quizData'
-
-  import { ref } from 'vue'
+ 
+  import { ref, provide } from 'vue'
   
   const gameStarted = ref(false) 
+const timerState = ref('')
+const updateTimerState= (state)=>{
+    timerState.value = state
+  }
+  provide("timerState", {timerState, updateTimerState
+});
+
 
   const startQuiz = ()=>{
 console.log("Starting guiz!!!!")
@@ -15,7 +23,13 @@ console.log("Starting guiz!!!!")
 
 <template>
     <div class="wrapper">
-     <h1>Start wars Quiz</h1> 
+     <h1>Start wars Quiz</h1>
+    <timer-component v-if="gameStarted" @vtimer-state="(state)=>{
+    
+      updateTimerState(state)
+      } "/>
+      
+    
      <app-comp-welcome v-if="!gameStarted" @start-game="startQuiz"/>
      <app-comp-quiz-list v-if="gameStarted && quizData" :quiz-list="quizData"/>
     </div>
