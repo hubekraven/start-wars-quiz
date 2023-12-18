@@ -11,18 +11,15 @@ const start = function(){
 <template>
   <div>
     <h3>welcome to the start wars quiz app</h3> 
-    
     <p>This is a small game to test your knowledge about Start Wars.</p>
     <p>You have will have to answer 10 question before the time runs out. If you are ready you can press the Start button to begin the game. Do you have what it takes to become a Jedi? May the force be with you </p>
 
-           <button @click="start"
-             class= "btn-start">
-             Start
-           </button>
- 
+    <button @click="start"
+      class= "btn-start">
+      Start
+    </button>
  </div>
- 
- </template>
+</template>
 
 <style lang="css" scoped>
 .resultat{

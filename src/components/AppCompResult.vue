@@ -6,41 +6,55 @@ import imgFailed from "@/assets/images/jedi_failed.png";
 import imgAlmostThere from "@/assets/images/tempsnip.png";
 import imgSuccess from "@/assets/images/jedi_success.png";
 
+
 const props = defineProps({
   quizResult: {
-    type:[Number,null],
+    type:[Object,null],
     default(rawProps){
       null
+    }
+  },
+  quizLimit:{
+    type: Number,
+    default(rawProps){
+      return 1
     }
   }
 })
 
+console.log('AppCompResult:',props.quizResult.value)
+const $emit = defineEmits(['reset-quiz', 'exit-quiz'])
+const maxPoints = props.quizLimit
 /**
 *@description handle the user final result - show message and correct icone according to user performance
 *@return {Obj}   message a, imgUrl
 */
  const computResult = ()=>{
-    if(props.quizResult < 3 )return {
+    if(props.quizResult.value < maxPoints )return {
       message:"Désolé! vous ne pouvez pas être un Jedi",
       imgUrl: imgFailed
     }
     
    
-    if(props.quizResult < 5 ) return {
+    if(props.quizResult.value < maxPoints ) return {
       message: "Encore un effort! Vous maitrisez presque la Force",
       imgUrl: imgAlmostThere
     }
     
-    if(props.quizResult === 5) return {
+    if(props.quizResult.value === maxPoints) return {
       message:"Excellent! la Force est avec vous. Vous êtes un vrai Jedi",
       imgUrl: imgSuccess
     }
     
   }
-  const $emit = defineEmits(['reset-quiz'])
+  
 
   const askQuizReset = ()=>{
     $emit('reset-quiz')
+  }
+
+  const askQuizExit = ()=>{
+    $emit('exit-quiz')
   }
   
 </script>
@@ -49,7 +63,7 @@ const props = defineProps({
   <div class="resultat-container" v-if="props.quizResult !==null">
      <div class="resultat">
          <div  class="score">Votre score: 
-           <span>{{props.quizResult}}/5</span>
+           <span>{{props.quizResult}}/{{maxPoints}}</span>
          </div>
          <span class="message">{{computResult().message}}</span>
          <img class="icon" :src="computResult().imgUrl"/>
@@ -58,6 +72,11 @@ const props = defineProps({
            <button @click="askQuizReset"
              class= "btn-reset">
              Relancer
+           </button>
+
+           <button @click="askQuizExit"
+             class= "btn-quit">
+             Terminer
            </button>
        </div>
  </div>
@@ -107,23 +126,33 @@ const props = defineProps({
   padding-top: 10%;
 }*/
 .btn{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
   position:relative;
   top: 30px;
   width: 100%;
   font-size: 20px;
   text-align: center;
 }
-.btn-reset{
+.btn-reset,.btn-quit {
   width: 130px;
   height: 45px;
   font-size: 20px;
   text-align: center;
   border: 0px;
   color: rgb(252, 252, 252);
-  background-color: rgb(0, 170, 37);
   cursor: pointer;
   -webkit-box-shadow: inset -2px -1px 7px 0 rgba(0,0,0,0.3),  3px 3px 5px 1px rgba(92,92,92,0.7);
   -moz-box-shadow: inset -2px -1px 7px 0 rgba(0,0,0,0.3),  3px 3px 5px 1px rgba(92,92,92,0.7);
   box-shadow: inset -2px -1px 7px 0 rgba(0,0,0,0.3),  3px 3px 5px 1px rgba(92,92,92,0.7);
+}
+
+.btn-reset{
+  background-color: rgb(0, 170, 37);
+}
+
+.btn-quit{
+  background-color: rgb(250, 165, 37);
 }
 </style>

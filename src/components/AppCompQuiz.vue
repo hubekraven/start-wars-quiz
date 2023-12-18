@@ -16,8 +16,6 @@ const props = defineProps({
 const $emit = defineEmits(['update-choice'])
 let choices = computed(()=>shuffleArray(props.quiz.choices))
 
-
-console.log({choices})
 //======END reactives variables
 
 /**
@@ -33,30 +31,36 @@ $emit('update-choice', e)
 </script>
 
 <template>
-  <div v-if="quiz" class="q_question">
-    <span class="q_text">{{quiz.ennonce}}</span><br/>
+  <div v-if="quiz" class="q_question" >
+    <Transition name="slide-up">
+    <div :key="quiz.id">
 
-    <div class="choices">
-      <div v-show="quiz.type == 'single_choice'">
-        <label v-for="(choice, i) of choices " :key="`Q_${quiz.id}_chx${i}`" class="q_choices"> {{choice.text}}
-            <input type="radio" name="choice" :id="choice.id"  @change="choiceAction($event)"/>
-            <span class="checkmark-radio"></span>
-        </label>
-      </div>
-      <div v-show="quiz.type == 'multi_choice'">
-        <label v-for="(choice, i) of choices " :key="`Q_${quiz.id}_chx${i}`" class="q_choices" > {{choice.text}}
-            <input type="checkbox" name="choice" :id="choice.id" @click="choiceAction($event)"/>
-            <span class="checkmark"></span>
-        </label>
-      </div>    
-      <div v-show="quiz.type == 'ordering_choice'" class="q_ordering" >
-        <div v-for=" (choice, i) of choices " class="q_choices"  :key="`Q_${quiz.id}_chx${i}`" :id="choice.id" @click="choiceAction($event)" > 
-            <div class="choice_text">{{choice.text}}</div>
-            <div class="choice_holder"></div>
+      
+      <span class="q_text">{{quiz.ennonce}}</span><br/>
+
+      <div class="choices">
+        <div v-show="quiz.type == 'single_choice'">
+          <label v-for="(choice, i) of choices " :key="`Q_${quiz.id}_chx${i}`" class="q_choices"> {{choice.text}}
+              <input type="radio" name="choice" :id="choice.id"  @change="choiceAction($event)"/>
+              <span class="checkmark-radio"></span>
+          </label>
+        </div>
+        <div v-show="quiz.type == 'multi_choice'">
+          <label v-for="(choice, i) of choices " :key="`Q_${quiz.id}_chx${i}`" class="q_choices" > {{choice.text}}
+              <input type="checkbox" name="choice" :id="choice.id" @click="choiceAction($event)"/>
+              <span class="checkmark"></span>
+          </label>
+        </div>    
+        <div v-show="quiz.type == 'ordering_choice'" class="q_ordering" >
+          <div v-for=" (choice, i) of choices " class="q_choices"  :key="`Q_${quiz.id}_chx${i}`" :id="choice.id" @click="choiceAction($event)" > 
+              <div class="choice_text">{{choice.text}}</div>
+              <div class="choice_holder"></div>
+          </div>
         </div>
       </div>
+    </div> 
+  </Transition>
     </div>
-  </div>
 </template>
 
 <style lang="css" scoped>
@@ -247,5 +251,20 @@ $emit('update-choice', e)
   padding: 5px 15px;
   /* margin: 5px; */
   left: -30px;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease-out;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
 }
 </style>

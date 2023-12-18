@@ -6,17 +6,27 @@ import {
 } from "../assets/shared/genralFunctions" // importing Methods from external js
 
 import AppCompQuiz from '@/components/AppCompQuiz.vue'
-import AppCompResult from '@/components/AppCompResult.vue'
+
 import { ref, reactive, computed,watch,inject } from 'vue'
 const props = defineProps({
   quizList: {
-    type:Array,
+    type: Array,
     default(rawProps){
       return []
     }
+  },
+  quizLimit:{
+    type: Number,
+    default(rawProps){
+      return 1
+    }
   }
 })
+
+const $emit = defineEmits(['quiz-over'])
+
 let QzPool = shuffleArray(props.quizList)
+const limit = props.quizLimit || 1
 //======reactives variables
 let questionIndex=ref(0);
 let userResponses = ref([]);
@@ -24,22 +34,28 @@ let tempChoice = ref([]);
 let btnDisabled = ref(true)
 let isCompleted = ref(false)
 
-
-
 let {timerState} = inject ('timerState')
 
 //Watching the providered timerState to know if timer is stopped or not
 let timeEnded =  computed(()=> timerState.value ==='stopped' ? true : false )
-let question = computed(()=> QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null )
+// let question = computed(()=> {
+//   if(questionIndex.value >= limit) return null
+//   return QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null 
+// })
+
+let question = computed(()=> QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null 
+)
+let gameEnded = computed(()=> questionIndex.value >= limit || timeEnded.value ? true : false )
 
 //======END reactives variables
+
 
 /**
 *@description Method to handle the option user make a choice
 *@param {Object} e - event 
 */
 const handleUserChoice= (c)=>{
-  
+ 
   if(!question.value) return 
   
   let search =null
@@ -122,12 +138,14 @@ const handleUserChoice= (c)=>{
       btnDisabled.value = true
       updateQuestionIndex();
     }
+    
   }
 /**
 *@description Method to update the que quiz
 */
   const updateQuestionIndex = ()=> {
-       if(questionIndex.value > QzPool.length) return
+
+       if(questionIndex.value >= limit) return
        questionIndex.value+=1
   }
 
@@ -138,11 +156,10 @@ const handleUserChoice= (c)=>{
 
   const comptResult = () => {
     let correctAnswers = 0;
-    console.log('UserResponse', userResponses.value)
+
     if(userResponses.value.length)
       userResponses.value.forEach((element) => {
         //Search corresponding question in the QzPool
-        console.log("===> Element: ",element.userResponse)
         let question = QzPool.find((el) => {
           return el.id === element.question;
         });
@@ -174,54 +191,56 @@ const handleUserChoice= (c)=>{
             correctAnswers += 1;
         }
       });
-    console.log('toto...', {correctAnswers})
 
     return correctAnswers;
   };
   
-  /**
-  *@description reset the quiz
-  */
-  const resetQuiz = ()=>{
+  // /**
+  // *@description reset the quiz
+  // */
+  // const resetQuiz = ()=>{
   
-    isCompleted.value = false
-    QzPool = shuffleArray(props.quizList)
-    questionIndex.value= 0
-    tempChoice.value= []
-    userResponses.value= []
-    //btnDisabled.value = true
+  //   isCompleted.value = false
+  //   QzPool = shuffleArray(props.quizList)
+  //   questionIndex.value= 0
+  //   tempChoice.value= []
+  //   userResponses.value= []
 
-  }
+  // }
 
-  watch(question, (newValue) => {
-    //console.log('position',{currentIndex:questionIndex.value, 'quizLength': QzPool.length})
-    if(questionIndex.value === QzPool.length && !question.value ) isCompleted.value = true
-
-    // if(timerState === 'stopped') timeEnded.value = true
+  watch(gameEnded, (newValue) => {
+    // Quiz should be completed when there is no more question in the Pool 
+    if(!gameEnded.value) return
+      console.log("validate-endGame: ", gameEnded.value, comptResult())
+      $emit('quiz-over', comptResult())
+    
+    //if(questionIndex.value === QzPool.length && !question.value ) isCompleted.value = true
   })
 
 </script>
 
 <template>
-  <template v-if="!isCompleted && !timeEnded">
-    <app-comp-quiz  
+  <div v-if="!gameEnded">
 
+      <app-comp-quiz
       :quiz="question" 
       @update-choice="handleUserChoice"
-    />
+      />
+
+    
     <div class="btn">
       <button @click="validate()"
-        :disabled="btnDisabled"
-        :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
-        Valider
+      :disabled="btnDisabled"
+      :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
+      Valider
       </button>
     </div>
-  </template>
-
-  <app-comp-result v-if="isCompleted || timeEnded" :quizResult="comptResult()" @reset-quiz="resetQuiz"></app-comp-result>
+  </div>
 </template>
 
 <style lang="css" scoped>
+
+
 .title{
   text-align: center;
 }
@@ -257,4 +276,6 @@ const handleUserChoice= (c)=>{
   background-color: rgb(196, 196, 196);
   cursor: not-allowed;
 }
+
+
 </style>
