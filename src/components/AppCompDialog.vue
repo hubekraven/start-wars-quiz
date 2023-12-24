@@ -1,46 +1,48 @@
 
-<script setup>
-import {ref} from 'vue'
-import AppCompDialog from './AppCompDialog.vue'
-const $emit = defineEmits(['start-game','set-game-mode'])
 
-const gameMode = ref(null)
-const selectMode = (m)=>{
-  $emit('set-game-mode', m)
-}
-const start = function(){
-  $emit('start-game')
-}
+<script setup>
+import { computed } from "vue"
+
+const props = defineProps({
+  dialogContext: {
+    type:String,
+    default(rawProps){
+      return 'toto'
+    }
+  },
+})
+// console.log("DialogContext", props.dialogContext)
+
+const dialog = computed(()=>{
+   const context= props.dialogContext
+  
+   let dialogHypertext = "" 
+    
+   switch(true){
+      case context == 'game-mode-normal': 
+      dialogHypertext =  `<span><b>Normal mode:</b></span> <p>Answer the 10 questions before the time runs out. Good luck and may the force be with you</p><br><p>Press the Start to begin the game. </p>`
+      break
+
+      case context == 'game-mode-attack': 
+      dialogHypertext =  `<span>Time attack mode:</span><p>Answer as many questions as you can before your time runs out. Each good answer will extend your time while any wrong answer will reduce your time. Good luck and may the force be with you</p>
+      <br><p>Press the Start to begin the game.</p>`
+
+
+      break
+
+      case context == 'game-ended': 
+      dialogHypertext =  '<h3>Finished! this is your result</3h>'
+      break
+    }
+
+   return dialogHypertext
+
+}) 
 </script>
 
 <template>
-  <div>
-    <h3>welcome to the start wars quiz app</h3> 
-    <p>This is a small game to test your knowledge about Start Wars.</p>
-    <p>Do you think you have what it takes to become a Jedi? find out!</p>
-<br>
-    <p>Choose the game mode</p>
-<div>
-  <br>
-  <label>
-    <input type="radio" v-model="gameMode" :value="'normal'"> Normal
-  </label> <span> | </span>
-  <label>
-    <input type="radio" v-model="gameMode" :value="'attack'"> Time-Attack
-  </label> 
-</div>
-<br>
-    
-<Transition name="fade"  mode="out-in" :duration="{ enter: 250, leave: 350 }">
-  <app-comp-dialog v-if="gameMode" :dialog-context="`game-mode-${gameMode}`" :key="gameMode"></app-comp-dialog>
-</Transition>
-    <button 
-      v-show="gameMode" 
-      @click="start"
-      class= "btn-start"
-    >
-      Start
-    </button>
+  <div v-if="dialog">
+    <div v-html="dialog" />
  </div>
 </template>
 

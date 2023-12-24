@@ -221,12 +221,10 @@ const handleUserChoice= (c)=>{
 
 <template>
   <div v-if="!gameEnded">
-
-      <app-comp-quiz
-      :quiz="question" 
-      @update-choice="handleUserChoice"
-      />
-
+    <app-comp-quiz
+    :quiz="question"
+    @update-choice="handleUserChoice"
+    /> 
     
     <div class="btn">
       <button @click="validate()"
@@ -277,5 +275,19 @@ const handleUserChoice= (c)=>{
   cursor: not-allowed;
 }
 
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease-out;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
 
 </style>

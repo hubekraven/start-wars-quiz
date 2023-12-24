@@ -22,7 +22,7 @@ const props = defineProps({
   }
 })
 
-console.log('AppCompResult:',props.quizResult.value)
+
 const $emit = defineEmits(['reset-quiz', 'exit-quiz'])
 const maxPoints = props.quizLimit
 /**

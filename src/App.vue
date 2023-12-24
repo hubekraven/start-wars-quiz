@@ -4,11 +4,13 @@
   import AppCompResult from './components/AppCompResult.vue'
   import TimerComponent from './components/TimerComponent.vue'
   import quizData from './db/quizData'
+  // import CompSvg from "./components/CompSvg.vue"
   import { ref, provide, computed, } from 'vue'
   
   const gameStarted = ref(false) 
   const timerState = ref('')
   const endResult= ref(null)
+  const gameMode= ref(null)
   const componentToShow = ref('AppCompWelcome')
   
   const maxQuestion=5
@@ -66,12 +68,13 @@
 <template>
     <div class="wrapper">
      <h1>Start wars Quiz</h1>
+     <timer-component v-show="gameStarted"></timer-component>
        <Transition name="fade"  mode="out-in" :duration="{ enter: 500, leave: 650 }">
           <component :is="currentComponent.name" v-on="currentComponent.evt" v-bind="currentComponent.props"></component>
         </Transition>
     </div>
   <main>
-   
+   <!-- <comp-svg/> -->
   </main>
 </template>
 
@@ -118,4 +121,13 @@
   transform: translateY(-20px);
   opacity: 0;
 }
+
+.app-icons-svg {
+  width: 30px;
+  height: 30px;
+  fill: #fff;
+  stroke: #fff;
+  cursor: pointer;
+}
+
 </style>

@@ -31,11 +31,9 @@ $emit('update-choice', e)
 </script>
 
 <template>
-  <div v-if="quiz" class="q_question" >
-    <Transition name="slide-up">
+  <div v-if="quiz"  class="q_question">
+    <Transition name="slide-up" mode="out-in" :duration="400">
     <div :key="quiz.id">
-
-      
       <span class="q_text">{{quiz.ennonce}}</span><br/>
 
       <div class="choices">
@@ -57,10 +55,10 @@ $emit('update-choice', e)
               <div class="choice_holder"></div>
           </div>
         </div>
-      </div>
-    </div> 
-  </Transition>
+      </div> 
     </div>
+  </Transition>
+  </div>
 </template>
 
 <style lang="css" scoped>
