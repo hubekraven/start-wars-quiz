@@ -8,13 +8,15 @@ const props = defineProps({
     default(rawProps){
       return {}
     }
-  }
-
+  },
+ shuffle:{
+  type:Boolean
+ }
 })
 
 //===Emitting event======//
 const $emit = defineEmits(['update-choice'])
-let choices = computed(()=>shuffleArray(props.quiz.choices))
+let choices = computed(()=> props.shuffle ? shuffleArray(props.quiz.choices): props.quiz.choices)
 
 //======END reactives variables
 

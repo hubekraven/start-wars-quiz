@@ -10,38 +10,37 @@ import imgSuccess from "@/assets/images/jedi_success.png";
 const props = defineProps({
   quizResult: {
     type:[Object,null],
-    default(rawProps){
+    default(){
       null
     }
   },
   quizLimit:{
     type: Number,
-    default(rawProps){
+    default(){
       return 1
     }
   }
 })
 
-
 const $emit = defineEmits(['reset-quiz', 'exit-quiz'])
-const maxPoints = props.quizLimit
+const {correctAnswers, total:maxPoints} = props.quizResult.value
 /**
 *@description handle the user final result - show message and correct icone according to user performance
 *@return {Obj}   message a, imgUrl
 */
  const computResult = ()=>{
-    if(props.quizResult.value < maxPoints )return {
+    if(correctAnswers < maxPoints )return {
       message:"Désolé! vous ne pouvez pas être un Jedi",
       imgUrl: imgFailed
     }
     
    
-    if(props.quizResult.value < maxPoints ) return {
+    if(correctAnswers < maxPoints ) return {
       message: "Encore un effort! Vous maitrisez presque la Force",
       imgUrl: imgAlmostThere
     }
     
-    if(props.quizResult.value === maxPoints) return {
+    if(correctAnswers === maxPoints) return {
       message:"Excellent! la Force est avec vous. Vous êtes un vrai Jedi",
       imgUrl: imgSuccess
     }
@@ -63,7 +62,7 @@ const maxPoints = props.quizLimit
   <div class="resultat-container" v-if="props.quizResult !==null">
      <div class="resultat">
          <div  class="score">Votre score: 
-           <span>{{props.quizResult}}/{{maxPoints}}</span>
+           <span>{{correctAnswers}}/{{maxPoints}}</span>
          </div>
          <span class="message">{{computResult().message}}</span>
          <img class="icon" :src="computResult().imgUrl"/>

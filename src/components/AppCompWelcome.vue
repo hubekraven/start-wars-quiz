@@ -1,11 +1,12 @@
 
 <script setup>
-import {ref} from 'vue'
+import {ref,inject} from 'vue'
 import AppCompDialog from './AppCompDialog.vue'
 const $emit = defineEmits(['start-game','set-game-mode'])
 
 const gameMode = ref(null)
-const selectMode = (m)=>{
+const {updateGameMode} = inject('gameMode')
+const setGameMode = (m)=>{
   $emit('set-game-mode', m)
 }
 const start = function(){
@@ -31,9 +32,9 @@ const start = function(){
 </div>
 <br>
     
-<Transition name="fade"  mode="out-in" :duration="{ enter: 250, leave: 350 }">
-  <app-comp-dialog v-if="gameMode" :dialog-context="`game-mode-${gameMode}`" :key="gameMode"></app-comp-dialog>
-</Transition>
+
+  <app-comp-dialog v-if="gameMode" :dialog-context="`game-mode-${gameMode}`"></app-comp-dialog>
+
     <button 
       v-show="gameMode" 
       @click="start"

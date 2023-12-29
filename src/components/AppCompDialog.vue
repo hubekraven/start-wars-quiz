@@ -1,17 +1,35 @@
 
 
 <script setup>
-import { computed } from "vue"
+import { computed, onMounted, watch } from "vue"
+
+const $emit = defineEmits(['evt-dialog'])
 
 const props = defineProps({
   dialogContext: {
     type:String,
     default(rawProps){
-      return 'toto'
+      return ''
     }
   },
+  animSettings: {
+    type:Object,
+    default(rawProps){
+      return {
+        _name:'fade',
+        _duration:{ enter: 250, leave: 350 },
+        _mode: 'out-in'
+      }
+    }
+  }
 })
-// console.log("DialogContext", props.dialogContext)
+
+
+const {_name, _duration,_mode="out-in"} = props.animSettings
+
+onMounted(() => {
+  $emit('evt-dialog', 'showing')
+})
 
 const dialog = computed(()=>{
    const context= props.dialogContext
@@ -38,11 +56,14 @@ const dialog = computed(()=>{
    return dialogHypertext
 
 }) 
+
 </script>
 
 <template>
   <div v-if="dialog">
-    <div v-html="dialog" />
+    <Transition :name="_name"  :mode="_mode" :duration="_duration">
+      <div v-html="dialog" :key="props.dialogContext"/>
+    </Transition>
  </div>
 </template>
 

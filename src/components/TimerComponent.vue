@@ -1,38 +1,47 @@
 
 
 <script setup>
-import { ref, computed,watch, onMounted, inject } from 'vue'
+import { ref, computed,watch, onMounted, toRefs, inject } from 'vue'
 
 const props = defineProps({
-  timerCount: {
-    type:Number,
-    default(rawProps){
-      return 10
+  timerCounter:{
+    type: Number,
+    default(){
+      return 1
     }
-  },
+  }
 })
 
 let counter = ref(0)
 let elapseTime = ref(0)
-const max = props.timerCount //in Minutes
+const {timerCounter:max} = toRefs(props) //in Minutes
 
-counter.value = max * 60
+const timerState = ref('stopped')
+counter.value = max.value * 60
 const $emit = defineEmits(['vtimer-state'])
 
-
+//const updateTimerState = inject('')
 const start =()=>{
-  if(counter.value >0 ) 
+ 
+  if(counter.value >0 && timerState.value !=="running") 
     elapseTime.value = setInterval(() => {
-    counter.value -= 1
+      if(counter.value <= 0) return 
+      counter.value -= 1
   }, 1000)
-  $emit('vtimer-state', 'started')
-  //inject("timerState", 'started');
+  timerState.value ='running'
+  $emit('vtimer-state', timerState.value)
+  
 }
 
 const stop =()=>{
   clearInterval(elapseTime.value)
-  $emit('vtimer-state', 'stopped')
-  //inject("timerState", 'stopped');
+  timerState.value ='stopped'
+  $emit('vtimer-state',timerState.value )
+}
+
+
+const reset =()=>{
+  counter.value = max.value * 60
 }
 
 /** 
@@ -40,6 +49,7 @@ const stop =()=>{
  * @param {Number} t - time in second  
 */
 const increaseTime = (t)=>{
+  t=t*60
   counter.value+=t
 }
 
@@ -48,19 +58,20 @@ const increaseTime = (t)=>{
  * @param {Number} t - time in second  
 */
 const decreaseTime = (t)=>{
-  counter.value-=t
+  t=t*60
+  counter.value - t <= 0 ? counter.value  = 0 : counter.value-=t
 }
 
+// Properties to expose from this component
+defineExpose({
+  start, stop, reset, increaseTime, decreaseTime
+})
 const formatTime = (seconds)=> {
       let d = new Date(null) //create a default date ref
       d.setSeconds(seconds) //set the time with passed numbers of seconds
       let ISOTime = d.toISOString().substr(14, 5) //convert the date in ISO 8601 format and get all only the time portion of it
       return ISOTime // time format 00:00:00
     }
-
-onMounted(() => {
-  setTimeout(()=>start(), 2500)
-})
 
 const time = computed(() => {
   return formatTime(counter.value)
@@ -71,21 +82,29 @@ const TMinutes = computed(() => {
   return counter.value % 60
 })
 
-  watch(counter, (newValue) => {
+  watch( counter, ()=> {
   
-      if(counter.value == 590) stop()
-
+      if(counter.value == 0) {
+        timerState.value = 'done'        
+        $emit('vtimer-state',timerState.value )
+          setTimeout(() => {
+            stop()
+          }, 500);
+      }
   })
+  
 
 </script>
 
 <template>
   <div>
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" viewBox="0 0 24 24" height="32" class="app-icons-svg" fill="red">
-  <path d="M12 0H6v2h6V0zM8 13h2V7H8v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.98-1.41-1.41l-1.42 1.42c-3.88-3.1-9.55-2.47-12.65 1.41S-.5 15.94 3.38 19.04s9.55 2.47 12.65-1.41a8.992 8.992 0 0 0 0-11.24zM9 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7c0 3.86-3.13 7-6.99 7H9z"/>
+          
+  <h2>TIMER </h2><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-stopwatch" viewBox="0 0 16 16">
+  <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5z"/>
+  <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5M8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3"/>
 </svg>
+<span>{{time}}</span>
 
-    <h2>TIMER  {{time}}</h2>
   </div>
  
  </template>

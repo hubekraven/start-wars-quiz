@@ -20,32 +20,48 @@ const props = defineProps({
     default(rawProps){
       return 1
     }
+  },
+  gameMode:{
+    type: Object,
+    default(){
+      return null
+    }
+  },
+  shuffle:{
+    type:Boolean
   }
 })
 
-const $emit = defineEmits(['quiz-over'])
+const $emit = defineEmits(['quiz-over', "user-answered"])
+const gameMode = props.gameMode
 
-let QzPool = shuffleArray(props.quizList)
-const limit = props.quizLimit || 1
+let QzPool = props.shuffle ? shuffleArray(props.quizList) :props.quizList 
 //======reactives variables
 let questionIndex=ref(0);
 let userResponses = ref([]);
 let tempChoice = ref([]);
 let btnDisabled = ref(true)
-let isCompleted = ref(false)
 
 let {timerState} = inject ('timerState')
 
-//Watching the providered timerState to know if timer is stopped or not
-let timeEnded =  computed(()=> timerState.value ==='stopped' ? true : false )
-// let question = computed(()=> {
-//   if(questionIndex.value >= limit) return null
-//   return QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null 
-// })
+//Watching the provided timerState to know if run out or not
+let timeEnded =  computed(()=> timerState.value ==='done' ? true : false )
 
-let question = computed(()=> QzPool[questionIndex.value] ? QzPool[questionIndex.value] : null 
-)
-let gameEnded = computed(()=> questionIndex.value >= limit || timeEnded.value ? true : false )
+let question = computed(()=> QzPool[questionIndex.value] && !timeEnded.value ? QzPool[questionIndex.value] : null )
+//let question = computed(()=> QzPool[0] && !timeEnded.value ? QzPool[0] : null )
+
+const limit = computed(()=>{
+  let _limit = null
+  
+  if(gameMode.value =='normal') _limit  = props.quizLimit||1
+  if(gameMode.value =='attack')_limit = QzPool.length
+  return _limit 
+})
+
+
+let gameEnded = computed(()=> {
+  return questionIndex.value >= limit.value || timeEnded.value ? true : false
+} )
 
 //======END reactives variables
 
@@ -125,11 +141,16 @@ const handleUserChoice= (c)=>{
   }
 }
 
-/**
-*@description Method to handle validation of the question once user answered
-*/
-  const validate = ()=> {
+/** 
+ *@description Method to confirm user choice on a question 
+ */ 
+const confirmChoice = ()=> {
     if (tempChoice.value.length > 0) {
+      if(gameMode.value =="attack") {
+        const res= validate(question.value, tempChoice.value)
+
+        $emit("user-answered", res )
+      }
      userResponses.value.push({
         question: question.value.id,
         userResponse: tempChoice.value,
@@ -141,11 +162,55 @@ const handleUserChoice= (c)=>{
     
   }
 /**
+*@description Method to handle validation of the question once user answered
+*@param {Object} question - the entire question object 
+*@param {Array} userRes - User Responses 
+*@return {String} srtResult - CORRECT | INCORRECT 
+*/
+  const validate = (question, usrRes)=> {
+
+    const {solus,type} = question
+    
+    let srtResult=""
+    
+    switch(type){
+      case 'ordering_choice':{
+            let count =0
+            for (let i = 0; i < solus.length; i++) {
+              const choice = usrRes[i]
+              if (choice.value == solus[i]) count += 1;
+            }
+            srtResult = count == solus.length ?  "CORRECT" : "INCORRECT"
+         break
+        }
+      case 'multi_choice':{
+        let count =0
+    
+        if( solus.length !== usrRes.length) return srtResult ="INCORRECT" 
+
+        usrRes.forEach(choice=>{
+          const c = parseInt(choice)
+          if(solus.includes(c)) count+=1
+        })
+        
+        srtResult = count == solus.length ?  "CORRECT" : "INCORRECT"
+        
+        break
+      }
+  	  case 'single_choice':
+      srtResult = usrRes == solus ? "CORRECT" : "INCORRECT" 
+      break
+      
+    }
+    
+    return srtResult
+  }
+/**
 *@description Method to update the que quiz
 */
   const updateQuestionIndex = ()=> {
 
-       if(questionIndex.value >= limit) return
+       if(questionIndex.value > limit.value) return
        questionIndex.value+=1
   }
 
@@ -160,79 +225,49 @@ const handleUserChoice= (c)=>{
     if(userResponses.value.length)
       userResponses.value.forEach((element) => {
         //Search corresponding question in the QzPool
-        let question = QzPool.find((el) => {
+        let _question = QzPool.find((el) => {
           return el.id === element.question;
         });
-        // compute the result according to the type of question
-        if (question && question.type === "ordering_choice") {
-          let count = 0;
-        
-          if (element.userResponse.length == question.solus.length) {
-            for (let i = 0; i < question.solus.length; i++) {
-              if (element.userResponse[i].value == question.solus[i]) count += 1;
-            }
-            if (count == question.solus.length) {
-              correctAnswers += 1;
-            }
-          }
-        } else if (question && question.type === "multi_choice") {
-          let count = 0;
-          if (element.userResponse.length == question.solus.length) {
-            element.userResponse.forEach((el) => {
-              if (question.solus.includes(parseInt(el))) count += 1;
-            });
-          }
-          if (count == question.solus.length) {
-            correctAnswers += 1;
-          }
-        } else if (question && question.type === "single_choice") {
-          console.log(element.userResponse);
-          if (question && question.solus == element.userResponse[0])
-            correctAnswers += 1;
-        }
+        // Compute result of each question according to validation result
+          const result= validate(_question, element.userResponse)
+          if(result === "CORRECT" ) correctAnswers += 1 
       });
-
-    return correctAnswers;
+      
+    const total = gameMode.value ==='attack' ? userResponses.value.length : limit.value 
+    
+    return {correctAnswers, total };
   };
   
-  // /**
-  // *@description reset the quiz
-  // */
-  // const resetQuiz = ()=>{
-  
-  //   isCompleted.value = false
-  //   QzPool = shuffleArray(props.quizList)
-  //   questionIndex.value= 0
-  //   tempChoice.value= []
-  //   userResponses.value= []
 
-  // }
-
-  watch(gameEnded, (newValue) => {
-    // Quiz should be completed when there is no more question in the Pool 
-    if(!gameEnded.value) return
-      console.log("validate-endGame: ", gameEnded.value, comptResult())
+  watch([gameEnded], (newValue) => {
+    // Quiz should be completed when there is no more question in the Pool or time is over
+    if(!gameEnded.value) return    
       $emit('quiz-over', comptResult())
-    
-    //if(questionIndex.value === QzPool.length && !question.value ) isCompleted.value = true
+
+
   })
 
 </script>
 
 <template>
-  <div v-if="!gameEnded">
-    <app-comp-quiz
-    :quiz="question"
-    @update-choice="handleUserChoice"
-    /> 
+  <div>
+    <div v-show="!gameEnded">
+      gameOver - {{gameEnded}}
+      <app-comp-quiz
+        :quiz="question"
+        :shuffle="shuffle"
+        @update-choice="handleUserChoice"
+      /> 
     
-    <div class="btn">
-      <button @click="validate()"
-      :disabled="btnDisabled"
-      :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
-      Valider
-      </button>
+      <div class="btn">
+        <button @click="confirmChoice()"
+          :disabled="btnDisabled"
+          :class= "!btnDisabled ? 'btn_enabled' : 'btn_disabled' ">
+          Valider
+        </button>
+      </div>
     </div>
+    <div v-show="gameEnded"></div>
   </div>
 </template>
 
