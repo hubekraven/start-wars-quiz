@@ -51,53 +51,49 @@ const reset =()=>{
  * @param {Number} t - time in second  
 */
 const increaseTime = (t)=>{
-  tChanger.value.classList.toggle("-up");
-  tModifier.value = `+ ${formatTime(t*60)}`
-    stop()
-    gsap.to(tChanger.value,{
-      keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
-      ease:"power1.inOut"
-    })
-    gsap.to(counter.value, {
-      duration: 0.5, 
-      delay:0.8,
-      onUpdate:()=>{
-        return counter.value+=t
-      },
-      onComplete:()=> {
-        tChanger.value.classList.toggle("-up");
-        start()
-      } 
-    })
+  console.log("Time Count: ", {t:t*60, init:counter.value, after:counter.value+t*60})
+  tModifier.value = `+${formatTime(t*60)}`
+  stop()
+  playTimeAnim("increase", t)
 }
+
 
 /** 
  * @description- add inscrease the current time by x value
  * @param {Number} t - time in second  
 */
 const decreaseTime = (t)=>{
-    tModifier.value = `- ${formatTime(t*60)}`
-    tChanger.value.classList.toggle("-down");
-    stop()
+  console.log("Time Count: ", {t:t*60,init:counter.value, after:counter.value-t*60})
+  tModifier.value = `-${formatTime(t*60)}`
+  stop()
+  playTimeAnim("decrease", t)    
+  
+}
+
+
+  const playTimeAnim =(anim, t)=>{
+  tChanger.value.classList.toggle(`-${anim}`);
     gsap.to(tChanger.value,{
       keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
       ease:"power1.inOut"
     })
-
     gsap.to(counter.value, {
       duration: 0.5, 
       delay:0.8,
       onUpdate:()=>{
-      if(counter.value <=0) return 0
-        return counter.value-=t
+        if(anim === 'increase') return  counter.value+=(t*60)
+        
+        if(anim==="decrease"){
+          if(counter.value <=0) return 0
+          return counter.value=counter.value-(t*60)
+        }
       },
       onComplete:()=> {
+        tChanger.value.classList.toggle(`-${anim}`);
         start()
-        tChanger.value.classList.toggle("-down");
-       } 
+      } 
     })
-  }
-
+}
 // Properties to expose from this component
 defineExpose({
   start, stop, reset, increaseTime, decreaseTime
@@ -150,13 +146,13 @@ const TMinutes = computed(() => {
   display:none
 }
 
-.-up{
+.-increase{
   display:inline-block;
   font-size:1.3em;
   color: green;
 }
 
-.-down{
+.-decrease{
   display:inline-block;
   font-size:1.3em;
   color: red;
