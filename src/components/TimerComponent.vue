@@ -1,7 +1,8 @@
 
 
 <script setup>
-import { ref, computed,watch, onMounted, toRefs, inject } from 'vue'
+import { ref, computed,watch, onMounted, toRefs, inject, onUpdated } from 'vue'
+import gsap  from "gsap"
 
 const props = defineProps({
   timerCounter:{
@@ -15,7 +16,8 @@ const props = defineProps({
 let counter = ref(0)
 let elapseTime = ref(0)
 const {timerCounter:max} = toRefs(props) //in Minutes
-
+const tModifier= ref(null)
+const tChanger= ref(null)
 const timerState = ref('stopped')
 counter.value = max.value * 60
 const $emit = defineEmits(['vtimer-state'])
@@ -49,8 +51,24 @@ const reset =()=>{
  * @param {Number} t - time in second  
 */
 const increaseTime = (t)=>{
-  t=t*60
-  counter.value+=t
+  tChanger.value.classList.toggle("-up");
+  tModifier.value = `+ ${formatTime(t*60)}`
+    stop()
+    gsap.to(tChanger.value,{
+      keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
+      ease:"power1.inOut"
+    })
+    gsap.to(counter.value, {
+      duration: 0.5, 
+      delay:0.8,
+      onUpdate:()=>{
+        return counter.value+=t
+      },
+      onComplete:()=> {
+        tChanger.value.classList.toggle("-up");
+        start()
+      } 
+    })
 }
 
 /** 
@@ -58,9 +76,27 @@ const increaseTime = (t)=>{
  * @param {Number} t - time in second  
 */
 const decreaseTime = (t)=>{
-  t=t*60
-  counter.value - t <= 0 ? counter.value  = 0 : counter.value-=t
-}
+    tModifier.value = `- ${formatTime(t*60)}`
+    tChanger.value.classList.toggle("-down");
+    stop()
+    gsap.to(tChanger.value,{
+      keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
+      ease:"power1.inOut"
+    })
+
+    gsap.to(counter.value, {
+      duration: 0.5, 
+      delay:0.8,
+      onUpdate:()=>{
+      if(counter.value <=0) return 0
+        return counter.value-=t
+      },
+      onComplete:()=> {
+        start()
+        tChanger.value.classList.toggle("-down");
+       } 
+    })
+  }
 
 // Properties to expose from this component
 defineExpose({
@@ -103,12 +139,26 @@ const TMinutes = computed(() => {
   <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5z"/>
   <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5M8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3"/>
 </svg>
-<span>{{time}}</span>
-
+<span class="ct-time">{{time}}</span> 
+<span v-show="tModifier" class="ct-changer" ref="tChanger">{{tModifier}}</span>
   </div>
  
  </template>
 
 <style lang="css" scoped>
+.ct-changer{
+  display:none
+}
 
+.-up{
+  display:inline-block;
+  font-size:1.3em;
+  color: green;
+}
+
+.-down{
+  display:inline-block;
+  font-size:1.3em;
+  color: red;
+}
 </style>
