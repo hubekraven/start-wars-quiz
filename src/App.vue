@@ -41,6 +41,7 @@
     componentToShow.value = 'AppCompQuizList'
     AppTimer.value.reset()
     setTimeout(()=>{
+      console.log('Start Quiz call StartTime')
       AppTimer.value.start() //Initialize the timer after 1s
     }, 800)
   }
@@ -50,8 +51,10 @@
     gameStarted.value = false
   }
 
-  const showResult = (res)=>{  
-    if(timerState.value ==='running') AppTimer.value.stop() //stop the timer
+  const showResult = (res)=>{
+    
+    console.log("timer state: ", timerState.value)  
+    if(timerState.value == 'running') AppTimer.value.stop() //stop the timer
 
     endResult.value = res
     componentToShow.value = 'AppCompDialog'

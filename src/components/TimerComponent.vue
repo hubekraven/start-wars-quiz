@@ -25,7 +25,7 @@ counter.value = max.value * 60
 const $emit = defineEmits(['vtimer-state'])
 
 const start =()=>{
- 
+ console.log("Call Time Start!")
   if(counter.value >0 && timerState.value !=="running") 
     elapseTime.value = setInterval(() => {
       if(counter.value <= 0) return 
@@ -37,6 +37,7 @@ const start =()=>{
 }
 
 const stop =()=>{
+  console.log('Stop Time!')
   clearInterval(elapseTime.value)
   timerState.value ='stopped'
   $emit('vtimer-state',timerState.value )
@@ -76,7 +77,7 @@ const decreaseTime = (t)=>{
 
 const playTimeAnim =(anim, toValue)=>{
   tChanger.value.classList.toggle(`-${anim}`);
-  
+  stop()
   gsap.to(tChanger.value,{
     keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
     ease:"power1.inOut"
