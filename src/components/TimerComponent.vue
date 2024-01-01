@@ -1,7 +1,7 @@
 
 
 <script setup>
-import { ref, computed,watch, onMounted, toRefs, inject, onUpdated } from 'vue'
+import { ref, computed,watch, onMounted, toRefs,toRef, inject, onUpdated } from 'vue'
 import gsap  from "gsap"
 
 const props = defineProps({
@@ -19,20 +19,21 @@ const {timerCounter:max} = toRefs(props) //in Minutes
 const tModifier= ref(null)
 const tChanger= ref(null)
 const timerState = ref('stopped')
+//const max = computed(() => 1.5)
+
 counter.value = max.value * 60
 const $emit = defineEmits(['vtimer-state'])
 
-//const updateTimerState = inject('')
 const start =()=>{
  
   if(counter.value >0 && timerState.value !=="running") 
     elapseTime.value = setInterval(() => {
       if(counter.value <= 0) return 
       counter.value -= 1
+      //counter.value
   }, 1000)
   timerState.value ='running'
-  $emit('vtimer-state', timerState.value)
-  
+  $emit('vtimer-state', timerState.value)  
 }
 
 const stop =()=>{
@@ -50,11 +51,11 @@ const reset =()=>{
  * @description- add inscrease the current time by x value
  * @param {Number} t - time in second  
 */
-const increaseTime = (t)=>{
-  console.log("Time Count: ", {t:t*60, init:counter.value, after:counter.value+t*60})
-  tModifier.value = `+${formatTime(t*60)}`
-  stop()
-  playTimeAnim("increase", t)
+const increaseTime = (t)=>{  
+  t=t*60
+  tModifier.value = `+${formatTime(t)}`
+  const newValue = counter.value + t
+  playTimeAnim("increase", newValue)
 }
 
 
@@ -63,36 +64,33 @@ const increaseTime = (t)=>{
  * @param {Number} t - time in second  
 */
 const decreaseTime = (t)=>{
-  console.log("Time Count: ", {t:t*60,init:counter.value, after:counter.value-t*60})
-  tModifier.value = `-${formatTime(t*60)}`
-  stop()
-  playTimeAnim("decrease", t)    
+  t=t*60
+  tModifier.value = `-${formatTime(t)}`
+  
+  const newValue = counter.value-t >0 ? counter.value-t :0
+  
+  playTimeAnim("decrease", newValue)    
   
 }
 
 
-  const playTimeAnim =(anim, t)=>{
+const playTimeAnim =(anim, toValue)=>{
   tChanger.value.classList.toggle(`-${anim}`);
-    gsap.to(tChanger.value,{
-      keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
-      ease:"power1.inOut"
-    })
-    gsap.to(counter.value, {
-      duration: 0.5, 
-      delay:0.8,
-      onUpdate:()=>{
-        if(anim === 'increase') return  counter.value+=(t*60)
-        
-        if(anim==="decrease"){
-          if(counter.value <=0) return 0
-          return counter.value=counter.value-(t*60)
-        }
-      },
-      onComplete:()=> {
-        tChanger.value.classList.toggle(`-${anim}`);
-        start()
-      } 
-    })
+  
+  gsap.to(tChanger.value,{
+    keyframes:[{scale:2, opacity:1, duration: 0.2},{scale:1,opacity:0, duration: 0.7}],
+    ease:"power1.inOut"
+  })
+  
+  gsap.to(counter, {
+    value:toValue,// target value for the counter
+    duration: 0.5, 
+    delay:0.8,
+    onComplete:()=> {
+      tChanger.value.classList.toggle(`-${anim}`);
+      start()
+    } 
+  })
 }
 // Properties to expose from this component
 defineExpose({
